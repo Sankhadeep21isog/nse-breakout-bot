@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
-# CRITICAL: This gives the runner permission to commit the updated sheet back to your repo
+# CRITICAL: Gives the workflow permission to push changes back to your repository
 permissions:
   contents: write
 
@@ -15,36 +15,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout the repository (Using v4 to fix Node.js warning)
+    # 1. Pull code into the runner environment
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # 2. Set up Python (Using v5 to fix Node.js warning)
+    # 2. Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    # 3. Install project dependencies (Fixed pip upgrade command)
+    # 3. Upgrade pip and install dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    # 4. Run your python script that generates/updates the final sheet
+    # 4. Run your bot script to update the sheet data
     - name: Run Update Script
       run: |
-        # Replace 'your_script.py' with the actual name of your Python file
-        python your_script.py
+        python update_bot.py
 
-    # 5. Automatically commit and push the updated sheet back to GitHub
+    # 5. Commit and push the updated spreadsheet back to GitHub
     - name: Commit and Push Updated Sheet
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         
-        # IMPORTANT: Replace 'final_sheet.csv' with your actual file name (e.g., output.xlsx, data.json)
+        # FIXME: Change 'final_sheet.csv' to your actual output file name if different
         git add final_sheet.csv 
         
-        # Only commit and push if the file actually changed
+        # Only commits and pushes if your bot actually made changes to the sheet
         git diff-index --quiet HEAD || (git commit -m "Automated sheet update [skip ci]" && git push)
