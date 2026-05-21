@@ -1,49 +1,32 @@
-name: Python Build and Update Sheet
+name: Update NSE Stocks to Google Sheet
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
-
-# CRITICAL: Gives the workflow permission to push changes back to your repository
-permissions:
-  contents: write
+  schedule:
+    # Runs at 14:45 UTC (8:15 PM IST), Monday to Friday
+    - cron: '45 14 * * 1-5'
+  workflow_dispatch:
 
 jobs:
-  build:
+  update-sheet:
     runs-on: ubuntu-latest
-
+    
     steps:
-    # 1. Pull code into the runner environment
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-    # 2. Set up Python environment
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    # 3. Upgrade pip and install dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # Installed your specific libraries using the correct pip setup
+      - name: Install Libraries
+        run: |
+          python -m pip install --upgrade pip
+          pip install gspread oauth2client pandas requests
 
-    # 4. Run your bot script to update the sheet data
-    - name: Run Update Script
-      run: |
-        python update_bot.py
-
-    # 5. Commit and push the updated spreadsheet back to GitHub
-    - name: Commit and Push Updated Sheet
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        
-        # FIXME: Change 'final_sheet.csv' to your actual output file name if different
-        git add final_sheet.csv 
-        
-        # Only commits and pushes if your bot actually made changes to the sheet
-        git diff-index --quiet HEAD || (git commit -m "Automated sheet update [skip ci]" && git push)
+      # Executing your exact file name with the GCP Secret attached
+      - name: Run Python Script
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        run: python update_bot.py
