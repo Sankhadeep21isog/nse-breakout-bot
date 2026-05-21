@@ -34,3 +34,10 @@ jobs:
         # pytest
         # Or run your main script to test if it executes without crashing:
         python -c "print('Environment configured successfully!')"
+        - name: Commit and Push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add path/to/your/final_sheet.csv  # Change to your actual file path
+        git diff-index --quiet HEAD || git commit -m "Automated sheet update"
+        git push
