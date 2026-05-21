@@ -1,4 +1,4 @@
-name: Python Build and Test
+name: Python Build and Update Sheet
 
 on:
   push:
@@ -6,38 +6,45 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+# CRITICAL: This gives the runner permission to commit the updated sheet back to your repo
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Standard repository checkout (Updated to v4 to fix Node.js 20 deprecation)
+    # 1. Checkout the repository (Using v4 to fix Node.js warning)
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # 2. Set up the Python environment (Updated to v5 to fix Node.js 20 deprecation)
+    # 2. Set up Python (Using v5 to fix Node.js warning)
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    # 3. Install project dependencies (Fixed the pip upgrade typo)
+    # 3. Install project dependencies (Fixed pip upgrade command)
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    # 4. Run your application tests or compilation steps
-    - name: Run Tests
+    # 4. Run your python script that generates/updates the final sheet
+    - name: Run Update Script
       run: |
-        # If you use pytest, uncomment the line below:
-        # pytest
-        # Or run your main script to test if it executes without crashing:
-        python -c "print('Environment configured successfully!')"
-        - name: Commit and Push changes
+        # Replace 'your_script.py' with the actual name of your Python file
+        python your_script.py
+
+    # 5. Automatically commit and push the updated sheet back to GitHub
+    - name: Commit and Push Updated Sheet
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add path/to/your/final_sheet.csv  # Change to your actual file path
-        git diff-index --quiet HEAD || git commit -m "Automated sheet update"
-        git push
+        
+        # IMPORTANT: Replace 'final_sheet.csv' with your actual file name (e.g., output.xlsx, data.json)
+        git add final_sheet.csv 
+        
+        # Only commit and push if the file actually changed
+        git diff-index --quiet HEAD || (git commit -m "Automated sheet update [skip ci]" && git push)
